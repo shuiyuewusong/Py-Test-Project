@@ -1,0 +1,83 @@
+# Test your FastAPI endpoints
+
+###
+POST http://127.0.0.1:8000/api/v1/health/check
+Accept: application/json
+
+###
+
+# 注册用户
+POST http://127.0.0.1:8000/api/users/register
+Content-Type: application/json
+
+{
+  "email": "964377809@qq.com",
+  "username": "test",
+  "password": "test123",
+  "full_name": "test-test",
+  "is_superuser": true
+}
+
+###
+
+# 登录 → 复制返回的 access_token 填入下方 Bearer
+POST http://127.0.0.1:8000/api/users/login
+Content-Type: application/json
+
+{
+  "email": "964377809@qq.com",
+  "password": "test123"
+}
+
+###
+
+# 获取当前用户信息（将 <token> 替换为登录返回的 access_token）
+POST http://127.0.0.1:8000/api/users/info
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc2MzMxNTY2fQ.Mu7ySbhztL42E3vBjMZzdZJq6q5ulMMnPgKC_ZSqdss
+
+###
+
+# 更新当前用户
+POST http://127.0.0.1:8000/api/v1/users/update
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "full_name": "新名字"
+}
+
+###
+
+# 用户列表（需要超级管理员权限）
+POST http://127.0.0.1:8000/api/v1/users/list
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "skip": 0,
+  "limit": 20
+}
+
+###
+
+# 获取指定用户（需要超级管理员权限）
+POST http://127.0.0.1:8000/api/v1/users/detail
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "user_id": 1
+}
+
+###
+
+# 删除指定用户（需要超级管理员权限）
+POST http://127.0.0.1:8000/api/v1/users/delete
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "user_id": 2
+}
+
+###
