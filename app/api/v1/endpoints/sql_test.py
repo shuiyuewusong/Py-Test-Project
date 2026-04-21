@@ -57,7 +57,7 @@ def get_user_by_id(user_id: int, db: DBSession) -> dict:
     return dict(row)
 
 
-@router.get("/users/by-email", summary="【有参-Query参数】按邮箱查询用户")
+@router.post("/users/by-email", summary="【有参-Query参数】按邮箱查询用户")
 def get_user_by_email(email: str, db: DBSession) -> dict:
     """Query 参数方式：/users/by-email?email=xxx@example.com"""
     sql = text(
