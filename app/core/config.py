@@ -1,4 +1,5 @@
 from typing import Literal
+from urllib.parse import quote_plus
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -62,8 +63,9 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         """根据 DB_TYPE 动态生成数据库连接 URL"""
         if self.DB_TYPE == "mysql":
+            encoded_password = quote_plus(self.MYSQL_PASSWORD)
             return (
-                f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
+                f"mysql+pymysql://{self.MYSQL_USER}:{encoded_password}"
                 f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
                 "?charset=utf8mb4"
             )
