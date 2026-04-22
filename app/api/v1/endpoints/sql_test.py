@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
-from sqlmodel import Session
+from sqlmodel import SQLModel
 
 from app.api.deps import DBSession
 
@@ -124,3 +124,67 @@ def get_users_by_ids(ids: list[int], db: DBSession) -> list[dict]:
     )
     rows = db.execute(sql, params).mappings().all()
     return [dict(row) for row in rows]
+
+
+# ──────────────────────────────────────────────
+# Body JSON 入参查询
+# ──────────────────────────────────────────────
+
+class UserQueryRequest(SQLModel):
+    """Body JSON 查询条件（所有字段均可选，组合过滤）"""
+    id: Optional[int] = None
+    email: Optional[str] = None
+    username: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    limit: int = 10
+    offset: int = 0
+
+
+@router.post("/users/query", summary="【有参-Body JSON】条件查询用户")
+def query_users(req: UserQueryRequest, db: DBSession) -> dict:
+    """
+    通过 Body JSON 传入过滤条件，所有字段可选，支持分页。
+    示例请求体：
+    {
+        "username": "admin",
+        "is_active": true,
+        "limit": 5,
+        "offset": 0
+    }
+    """
+    conditions = ["1=1"]
+    params: dict = {"limit": req.limit, "offset": req.offset}
+
+    if req.id is not None:
+        conditions.append("id = :id")
+        params["id"] = req.id
+
+    if req.email is not None:
+        conditions.append("email LIKE :email")
+        params["email"] = f"%{req.email}%"
+
+    if req.username is not None:
+        conditions.append("username LIKE :username")
+        params["username"] = f"%{req.username}%"
+
+    if req.is_active is not None:
+        conditions.append("is_active = :is_active")
+        params["is_active"] = int(req.is_active)
+
+    if req.is_superuser is not None:
+        conditions.append("is_superuser = :is_superuser")
+        params["is_superuser"] = int(req.is_superuser)
+
+    where = " AND ".join(conditions)
+    sql = text(
+        f"SELECT id, email, username, full_name, is_active, is_superuser, created_at "
+        f"FROM users WHERE {where} ORDER BY id LIMIT :limit OFFSET :offset"
+    )
+    count_sql = text(f"SELECT COUNT(*) AS total FROM users WHERE {where}")
+    count_params = {k: v for k, v in params.items() if k not in ("limit", "offset")}
+
+    rows = db.execute(sql, params).mappings().all()
+    total = db.execute(count_sql, count_params).scalar()
+
+    return {"total": total, "items": [dict(r) for r in rows]}
